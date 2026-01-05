@@ -1,10 +1,15 @@
 import { useContext, useEffect, useState } from "react"
 import { Navigate, Link } from "react-router-dom"
 import { AuthContext } from "../AuthContext"
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import {} from "@fortawesome/free-regular-svg-icons"
+import { faArrowTrendUp,faBoxOpen,faShoppingCart } from "@fortawesome/free-solid-svg-icons"
+
+
 import axios from "axios"
 
 const Inicio = () => {
-    const { isLoggedIn, logout} = useContext(AuthContext)
+    const { isLoggedIn} = useContext(AuthContext)
 
     const listadoId = JSON.parse(localStorage.getItem("idDeListado"));
     const [productos, setProductos] = useState([])
@@ -148,32 +153,30 @@ const Inicio = () => {
     return <Navigate to="/" replace />
   }
 
-  console.log("listadoId desde context:", listadoId);
+    console.log("listadoId desde context:", listadoId);
 
 
-  return (
+return (
     <>
     <h1>Home</h1>
-
-    <button onClick={logout}>Cerrar sesión</button>
 
     <div className="contenedor">
         <div className="cards">
             <h3>{totalVentas}</h3>
             <h4>Ventas</h4>
-            <Link to="/inventario">↗ Ver en el inventario</Link>
+            <Link to="/inventario"><FontAwesomeIcon icon={faArrowTrendUp} /> Ver en el inventario</Link>
         </div>
 
         <div className="cards">
             <h3>{ventasUltimaSemana.length}</h3>
             <h4>Ventas de la semana</h4>
-            <Link to="/inventario">↗ Ver en el inventario</Link>
+            <Link to="/inventario"><FontAwesomeIcon icon={faArrowTrendUp} /> Ver en el inventario</Link>
         </div>
 
         <div className="cards">
             <h3>{totalProductos}</h3>
             <h4>Productos</h4>
-            <Link to="/inventario">↗ Ver en el inventario</Link>
+            <Link to="/inventario"><FontAwesomeIcon icon={faArrowTrendUp} /> Ver en el inventario</Link>
         </div>
 
         <div className="ValoInventario">
@@ -215,8 +218,8 @@ const Inicio = () => {
             <div className="conten-interno">
             <h3>Acciones Rapidas</h3>
             <div className="conten-botones">
-                <button onClick={abrir} className="venta">🛒 Venta Rapida</button>
-                <button onClick={abrir2} className="compra">📦 Compra Rapida</button>
+                <button onClick={abrir} className="venta"><FontAwesomeIcon icon={faShoppingCart} /> Venta Rapida</button>
+                <button onClick={abrir2} className="compra"><FontAwesomeIcon icon={faBoxOpen} /> Compra Rapida</button>
             </div>
             </div>
 

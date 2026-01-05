@@ -20,6 +20,7 @@ const Inventario = () => {
     const [cantidad, setCantidad] = useState("");
     const [precio, setPrecio] = useState("");
     const [stockEst, setStockEst] = useState("");
+    const [descripcion, setDescripcion] = useState("");
 
     const [idVenta, setIdVenta] = useState("");
     const [cantidadVenta, setCantidadVenta] = useState("");
@@ -31,7 +32,7 @@ const Inventario = () => {
     const [nombreMod, setNombreMod] = useState("")
     const [cantidadMod, setCantidadMod] = useState("")
     const [precioMod, setPrecioMod] = useState("")
-    // const [descripcionMod, setDescripcionMod] = useState("")
+    const [descripcionMod, setDescripcionMod] = useState("")
     const [stockEstMod, setStockEstMod] = useState("")
   // 🚀 cargar productos
     useEffect(() => {
@@ -63,11 +64,11 @@ const Inventario = () => {
     const registrarMovimiento = async (tipo, producto, cantidad) => {
     try {
         const nuevoMovimiento = {
-        listadoId,
-        tipo,
-        producto,
-        cantidad: Number(cantidad),
-        fecha: new Date()
+          listadoId,
+          tipo,
+          producto,
+          cantidad: Number(cantidad),
+          fecha: new Date()
         };
 
         const res = await axios.post(
@@ -94,6 +95,7 @@ const Inventario = () => {
       cantidad: Number(cantidad),
       precio: Number(precio),
       stockEst: Number(stockEst),
+      descripcion
     };
 
     const res = await axios.post(
@@ -109,6 +111,7 @@ const Inventario = () => {
     setCantidad("");
     setPrecio("");
     setStockEst("");
+    setDescripcion("");
   };
 
   // 💸 VENTA
@@ -173,6 +176,7 @@ const Inventario = () => {
             cantidad: Number(cantidadMod),
             precio: Number(precioMod),
             stockEst: Number(stockEstMod),
+            descripcion: descripcionMod
         }
         );
 
@@ -192,6 +196,7 @@ const Inventario = () => {
         setCantidadMod("");
         setPrecioMod("");
         setStockEstMod("");
+        setDescripcionMod("");
     } catch (error) {
         console.error("Error al modificar producto", error);
     }
@@ -221,6 +226,9 @@ const Inventario = () => {
             <br />
             <label>Precio</label>
             <input type="number" value={precio} onChange={e => setPrecio(e.target.value)} required />
+            <br />
+            <label>Descripcion</label>
+            <input type="number" value={descripcion} onChange={e => setDescripcion(e.target.value)} required />
             <br />
             <label>Stock Estadar</label>
             <input type="number" value={stockEst} onChange={e => setStockEst(e.target.value)} required />
@@ -272,6 +280,9 @@ const Inventario = () => {
                 <br />
                 <label>Precio</label>
                 <input type="number" value={precioMod} onChange={e => setPrecioMod(e.target.value)} required />
+                <br />
+                <label>Precio</label>
+                <input type="number" value={descripcionMod} onChange={e => setDescripcionMod(e.target.value)} required />
                 <br />
                 <label>Stock Estadar</label>
                 <input type="number" value={stockEstMod} onChange={e => setStockEstMod(e.target.value)} required />

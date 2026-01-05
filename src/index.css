@@ -305,6 +305,10 @@ ol{
   align-items: center;
   font-weight: bold;
 }
+.venta svg, .compra svg{
+  padding: 5px;
+}
+
 .conten-interno .conten-botones .compra{
   background-color: #2450a1;
   border: none;
