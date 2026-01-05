@@ -28,14 +28,13 @@
         if (!bandera || !isLoggedIn) return
 
         const recibir = async () => {
-        try {
-            const resultado = await axios.get(
-            "https://backend-nodejs-expressjs-fce4.onrender.com/users"
-            )
-            setUsuario(resultado.data)
-        } catch (error) {
-            console.log("Error", error)
-        }
+            try {
+                const resultado = await axios.get("https://backend-nodejs-expressjs-fce4.onrender.com/users")
+                console.log("DATA:", resultado.data)
+                setUsuario(resultado.data)
+            } catch (error) {
+                console.log("Error", error)
+            }
         }
 
         recibir()
@@ -53,9 +52,9 @@
             <ul>
             {usuario.map((i) => (
                 <li key={i.id}>
-                Usuario: {i.nombre}
+                Usuario: {i.user}
                 <br />
-                Contraseña: {i.contrase}
+                Contraseña: {i.password}
                 </li>
             ))}
             </ul>

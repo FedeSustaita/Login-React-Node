@@ -1,0 +1,326 @@
+import { useContext, useEffect, useState } from "react";
+import { Navigate } from "react-router-dom";
+import { AuthContext } from "../AuthContext";
+import axios from "axios";
+
+const Inventario = () => {
+    const { isLoggedIn } = useContext(AuthContext);
+
+    // 🔑 listadoId desde sesión
+    const listadoId = JSON.parse(localStorage.getItem("idDeListado"));
+
+    // 📦 productos (SIEMPRE desde backend)
+    const [productos, setProductos] = useState([]);
+
+    // 📜 historial (local)
+    const [historial, setHistorial] = useState([]);
+
+    // formularios
+    const [nombre, setNombre] = useState("");
+    const [cantidad, setCantidad] = useState("");
+    const [precio, setPrecio] = useState("");
+    const [stockEst, setStockEst] = useState("");
+
+    const [idVenta, setIdVenta] = useState("");
+    const [cantidadVenta, setCantidadVenta] = useState("");
+    const [idCompra, setIdCompra] = useState("");
+    const [cantidadCompra, setCantidadCompra] = useState("");
+
+
+    const [idMod, setIdMod] = useState("")
+    const [nombreMod, setNombreMod] = useState("")
+    const [cantidadMod, setCantidadMod] = useState("")
+    const [precioMod, setPrecioMod] = useState("")
+    // const [descripcionMod, setDescripcionMod] = useState("")
+    const [stockEstMod, setStockEstMod] = useState("")
+  // 🚀 cargar productos
+    useEffect(() => {
+    if (!listadoId) return;
+
+    const traerDatos = async () => {
+        try {
+        const [resProductos, resHistorial] = await Promise.all([
+            axios.get(`http://localhost:3000/productos/listado/${listadoId}`),
+            axios.get(`http://localhost:3000/movimientos/listado/${listadoId}`)
+        ]);
+
+        setProductos(resProductos.data);
+        setHistorial(resHistorial.data);
+
+        console.log("Productos:", resProductos.data);
+        console.log("Historial:", resHistorial.data);
+
+        } catch (error) {
+        console.error(error);
+        }
+    };
+
+    traerDatos();
+    }, [listadoId]);
+
+
+  // 📜 historial
+    const registrarMovimiento = async (tipo, producto, cantidad) => {
+    try {
+        const nuevoMovimiento = {
+        listadoId,
+        tipo,
+        producto,
+        cantidad: Number(cantidad),
+        fecha: new Date()
+        };
+
+        const res = await axios.post(
+        "http://localhost:3000/movimientos",
+        nuevoMovimiento
+        );
+
+        // actualiza el estado con lo que viene de la DB
+        setHistorial(prev => [res.data, ...prev]);
+
+    } catch (error) {
+        console.error("Error al registrar movimiento", error);
+    }
+    };
+
+
+  // ➕ CARGA
+  const carga = async (e) => {
+    e.preventDefault();
+
+    const nuevo = {
+      listadoId,
+      nombre,
+      cantidad: Number(cantidad),
+      precio: Number(precio),
+      stockEst: Number(stockEst),
+    };
+
+    const res = await axios.post(
+      "http://localhost:3000/productos",
+      nuevo
+    );
+
+    setProductos(prev => [...prev, res.data]);
+    await registrarMovimiento("CARGA", nombre, cantidad);
+
+
+    setNombre("");
+    setCantidad("");
+    setPrecio("");
+    setStockEst("");
+  };
+
+  // 💸 VENTA
+  const venta = async (e) => {
+    e.preventDefault();
+
+    const producto = productos.find(p => p._id === idVenta);
+    if (!producto) return;
+
+    const nuevaCantidad = Math.max(
+      0,
+      producto.cantidad - Number(cantidadVenta)
+    );
+
+    const res = await axios.put(
+      `http://localhost:3000/productos/${producto._id}`,
+      { cantidad: nuevaCantidad }
+    );
+
+    setProductos(prev =>
+      prev.map(p => (p._id === producto._id ? res.data : p))
+    );
+
+    await registrarMovimiento("VENTA", producto.nombre, cantidadVenta);
+    setIdVenta("");
+    setCantidadVenta("");
+  };
+  const compra = async (e) => {
+    e.preventDefault();
+
+    const producto = productos.find(p => p._id === idCompra);
+    if (!producto) return;
+
+    const nuevaCantidad = Math.max(
+      0,
+      producto.cantidad + Number(cantidadCompra)
+    );
+
+    const res = await axios.put(
+      `http://localhost:3000/productos/${producto._id}`,
+      { cantidad: nuevaCantidad }
+    );
+
+    setProductos(prev =>
+      prev.map(p => (p._id === producto._id ? res.data : p))
+    );
+
+    await registrarMovimiento("COMPRA", producto.nombre, cantidadCompra);
+    setIdVenta("");
+    setCantidadVenta("");
+  };
+    const modificar = async (e) => {
+    e.preventDefault();
+
+    if (!idMod) return;
+
+    try {
+        const res = await axios.put(
+        `http://localhost:3000/productos/${idMod}`,
+        {
+            nombre: nombreMod,
+            cantidad: Number(cantidadMod),
+            precio: Number(precioMod),
+            stockEst: Number(stockEstMod),
+        }
+        );
+
+        setProductos(prev =>
+        prev.map(p => (p._id === idMod ? res.data : p))
+        );
+
+        await registrarMovimiento(
+            "MODIFICACIÓN",
+            res.data.nombre,
+            cantidadMod
+        );
+
+
+        setIdMod("");
+        setNombreMod("");
+        setCantidadMod("");
+        setPrecioMod("");
+        setStockEstMod("");
+    } catch (error) {
+        console.error("Error al modificar producto", error);
+    }
+    };
+
+  // 🗑 ELIMINAR
+    const eliminar = async (id) => {
+        await axios.delete(`http://localhost:3000/productos/${id}`);
+        setProductos(prev => prev.filter(p => p._id !== id));
+    };
+
+  if (!isLoggedIn) return <Navigate to="/" replace />;
+
+  return (
+    <>
+      <h1>Inventario</h1>
+      <div className="contenedor-supremo">
+        <div className="aside">
+
+          <h2>Agregar productos</h2>
+          <form onSubmit={carga}>
+            <label>Nombre</label>
+            <input type="text" value={nombre} onChange={e => setNombre(e.target.value)} required />
+            <br />
+            <label>Cantidad</label>
+            <input type="number" value={cantidad} onChange={e => setCantidad(e.target.value)} required />
+            <br />
+            <label>Precio</label>
+            <input type="number" value={precio} onChange={e => setPrecio(e.target.value)} required />
+            <br />
+            <label>Stock Estadar</label>
+            <input type="number" value={stockEst} onChange={e => setStockEst(e.target.value)} required />
+            <br />
+            <button type="submit">Agregar</button>
+          </form>
+
+            <h3>Venta</h3>
+            <form onSubmit={venta}>
+                <select value={idVenta} onChange={e => setIdVenta(e.target.value)} required>
+                <option value="">Seleccionar producto</option>
+                {productos.map(p => (
+                    <option key={p._id} value={p._id}>{p.nombre}</option>
+                ))}
+                </select>
+                <label>Cantidad</label>
+                <input type="number" value={cantidadVenta} onChange={e => setCantidadVenta(e.target.value)} required />
+                <button type="submit">Vender</button>
+            </form>
+
+            <h3>Compra</h3>
+            <form onSubmit={compra}>
+                <select value={idCompra} onChange={e => setIdCompra(e.target.value)} required>
+                <option value="">Seleccionar producto</option>
+                {productos.map(p => (
+                    <option key={p._id} value={p._id}>{p.nombre}</option>
+                ))}
+                </select>
+                <label>Cantidad</label>
+                <input type="number" value={cantidadCompra} onChange={e => setCantidadCompra(e.target.value)} required />
+                <button type="submit">Comprar</button>
+            </form>
+
+
+            <h3>Modificar</h3>
+            <form onSubmit={modificar}>
+                <select value={idMod} onChange={e => setIdMod(e.target.value)} required>
+                <option value="">Seleccionar producto</option>
+                {productos.map(p => (
+                    <option key={p._id} value={p._id}>{p.nombre}</option>
+                ))}
+                </select>
+                <br />
+                <label>Nombre</label>
+                <input type="text" value={nombreMod} onChange={e => setNombreMod(e.target.value)} required />
+                <br />
+                <label>Cantidad</label>
+                <input type="number" value={cantidadMod} onChange={e => setCantidadMod(e.target.value)} required />
+                <br />
+                <label>Precio</label>
+                <input type="number" value={precioMod} onChange={e => setPrecioMod(e.target.value)} required />
+                <br />
+                <label>Stock Estadar</label>
+                <input type="number" value={stockEstMod} onChange={e => setStockEstMod(e.target.value)} required />
+                <br />
+                <button type="submit">Modificar</button>
+            </form>
+
+            <div className="historial">
+                <h3>Historial de movimientos</h3>
+                <ul>
+                {historial.map((h, i) => (
+                    <li key={i} className={`mov ${h.tipo.toLowerCase()}`}>
+                    <strong>{h.tipo}</strong> | {h.producto} | Cantidad: {h.cantidad}
+                    <small>{new Date(h.fecha).toLocaleString()}</small>
+                    </li>
+                ))}
+                </ul>
+            </div>
+        </div>
+
+        <div className="Right">
+            <h3>Productos</h3>
+            <ol>
+                {productos.map(p => {
+                const estado = (p.cantidad / p.stockEst) < 0.5 ? "bajo" : (p.cantidad / p.stockEst) < 1 ? "medio" : "ok"
+                return (
+                    <div className={`card-prod ${estado}`} key={p._id}>
+                    <div className="titulo"><h3>{p.nombre}</h3></div>
+                    <hr />
+                    <div className="main">
+                        <h4>{p.cantidad} / {p.stockEst}</h4>
+                        <div className="stock-bar">
+                        <div className={`fill ${estado}`} style={{ width: `${(p.cantidad / p.stockEst) * 100}%` }}></div>
+                        </div>
+                    </div>
+                    <div className="descr">{p.descripcion}</div>
+                    <div className="footer">
+                        <h4>Precio: ${p.precio}</h4>
+                        <button onClick={() => eliminar(p._id)}>🗑</button>
+                    </div>
+                    <div className="color"></div>
+                    </div>
+                )
+                })}
+            </ol>
+        </div>
+    </div>
+    </>
+  );
+};
+
+export default Inventario;

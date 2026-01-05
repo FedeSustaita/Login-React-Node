@@ -1,31 +1,52 @@
-    import { createContext, useEffect, useState } from "react";
+import { createContext, useEffect, useState } from "react";
 
-    // 1️⃣ Context
-    export const AuthContext = createContext();
+// Context
+export const AuthContext = createContext();
 
-    export const AuthProvider = ({ children }) => {
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
+export const AuthProvider = ({ children }) => {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [listadoId, setListadoId] = useState(null);
 
-    useEffect(() => {
-        const saved = localStorage.getItem("isLoggedIn");
-        if (saved === "true") {
-        setIsLoggedIn(true);
-        }
-    }, []);
+  // 🔄 Restaurar sesión
+  useEffect(() => {
+    const savedLogin = localStorage.getItem("isLoggedIn");
+    const savedListado = localStorage.getItem("listadoId");
 
-    const login = () => {
-        setIsLoggedIn(true);
-        localStorage.setItem("isLoggedIn", "true");
-    };
+    if (savedLogin === "true" && savedListado) {
+      setIsLoggedIn(true);
+      setListadoId(Number(savedListado));
+    }
+  }, []);
 
-    const logout = () => {
-        setIsLoggedIn(false);
-        localStorage.setItem("isLoggedIn", "false");
-    };
+  // 🔐 Login
+  const login = (idListado) => {
+    setIsLoggedIn(true);
+    setListadoId(idListado);
 
-    return (
-        <AuthContext.Provider value={{ isLoggedIn, login, logout }}>
-        {children}
-        </AuthContext.Provider>
-    );
-    };
+    localStorage.setItem("isLoggedIn", "true");
+    localStorage.setItem("listadoId", idListado);
+  };
+
+  // 🚪 Logout
+  const logout = () => {
+    setIsLoggedIn(false);
+    setListadoId(null);
+
+    localStorage.removeItem("isLoggedIn");
+    localStorage.removeItem("listadoId");
+    localStorage.removeItem("historial"); // opcional
+  };
+
+  return (
+    <AuthContext.Provider
+      value={{
+        isLoggedIn,
+        listadoId,
+        login,
+        logout,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+};
