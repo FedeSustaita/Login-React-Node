@@ -17,7 +17,7 @@ const Productos = () => {
     const traerDatos = async () => {
       try {
         const [resProductos] = await Promise.all([
-            axios.get(`http://localhost:3000/productos/listado/${listadoId}`)
+            axios.get(`https://login-backend-v24z.onrender.com/productos/listado/${listadoId}`)
         ])
         setProductos(resProductos.data)
       } catch (error) {

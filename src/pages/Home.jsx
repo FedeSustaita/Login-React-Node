@@ -14,7 +14,7 @@ const Home = () => {
   useEffect(() => {
     const recibir = async () => {
       try {
-        const resultado = await axios.get("http://localhost:3000/usuarios");
+        const resultado = await axios.get("https://login-backend-v24z.onrender.com/usuarios");
         setDatos(resultado.data);
       } catch (error) {
         console.error("Error al traer usuarios", error);

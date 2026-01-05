@@ -40,8 +40,8 @@ const Inventario = () => {
     const traerDatos = async () => {
         try {
         const [resProductos, resHistorial] = await Promise.all([
-            axios.get(`http://localhost:3000/productos/listado/${listadoId}`),
-            axios.get(`http://localhost:3000/movimientos/listado/${listadoId}`)
+            axios.get(`https://login-backend-v24z.onrender.com/productos/listado/${listadoId}`),
+            axios.get(`https://login-backend-v24z.onrender.com/movimientos/listado/${listadoId}`)
         ]);
 
         setProductos(resProductos.data);
@@ -71,7 +71,7 @@ const Inventario = () => {
         };
 
         const res = await axios.post(
-        "http://localhost:3000/movimientos",
+        "https://login-backend-v24z.onrender.com/movimientos",
         nuevoMovimiento
         );
 
@@ -97,7 +97,7 @@ const Inventario = () => {
     };
 
     const res = await axios.post(
-      "http://localhost:3000/productos",
+      "https://login-backend-v24z.onrender.com/productos",
       nuevo
     );
 
@@ -124,7 +124,7 @@ const Inventario = () => {
     );
 
     const res = await axios.put(
-      `http://localhost:3000/productos/${producto._id}`,
+      `https://login-backend-v24z.onrender.com/productos/${producto._id}`,
       { cantidad: nuevaCantidad }
     );
 
@@ -148,7 +148,7 @@ const Inventario = () => {
     );
 
     const res = await axios.put(
-      `http://localhost:3000/productos/${producto._id}`,
+      `https://login-backend-v24z.onrender.com/productos/${producto._id}`,
       { cantidad: nuevaCantidad }
     );
 
@@ -167,7 +167,7 @@ const Inventario = () => {
 
     try {
         const res = await axios.put(
-        `http://localhost:3000/productos/${idMod}`,
+        `https://login-backend-v24z.onrender.com/productos/${idMod}`,
         {
             nombre: nombreMod,
             cantidad: Number(cantidadMod),
@@ -199,7 +199,7 @@ const Inventario = () => {
 
   // 🗑 ELIMINAR
     const eliminar = async (id) => {
-        await axios.delete(`http://localhost:3000/productos/${id}`);
+        await axios.delete(`https://login-backend-v24z.onrender.com/productos/${id}`);
         setProductos(prev => prev.filter(p => p._id !== id));
     };
 

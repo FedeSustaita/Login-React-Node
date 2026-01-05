@@ -12,7 +12,7 @@ const Log = () => {
 
     const Crear = async () => {
       try {
-        const respuesta = await axios.post('http://localhost:3000/usuarios', {
+        const respuesta = await axios.post('https://login-backend-v24z.onrender.com/usuarios', {
             username: usuario,
             password: contra
         });
