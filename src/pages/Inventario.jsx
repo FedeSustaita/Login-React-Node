@@ -228,7 +228,7 @@ const Inventario = () => {
             <input type="number" value={precio} onChange={e => setPrecio(e.target.value)} required />
             <br />
             <label>Descripcion</label>
-            <input type="number" value={descripcion} onChange={e => setDescripcion(e.target.value)} required />
+            <input type="text" value={descripcion} onChange={e => setDescripcion(e.target.value)} required />
             <br />
             <label>Stock Estadar</label>
             <input type="number" value={stockEst} onChange={e => setStockEst(e.target.value)} required />
@@ -282,7 +282,7 @@ const Inventario = () => {
                 <input type="number" value={precioMod} onChange={e => setPrecioMod(e.target.value)} required />
                 <br />
                 <label>Precio</label>
-                <input type="number" value={descripcionMod} onChange={e => setDescripcionMod(e.target.value)} required />
+                <input type="text" value={descripcionMod} onChange={e => setDescripcionMod(e.target.value)} required />
                 <br />
                 <label>Stock Estadar</label>
                 <input type="number" value={stockEstMod} onChange={e => setStockEstMod(e.target.value)} required />
