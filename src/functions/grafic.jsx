@@ -106,7 +106,9 @@ const VentasVsCompras = ({ historial }) => {
     }
   };
 
-  return <Chart data={data} options={options} />;
+return (
+  <Chart type="bar" data={data} options={options} />
+);
 };
 
 export default VentasVsCompras;
