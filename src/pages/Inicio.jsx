@@ -64,6 +64,32 @@ const Inicio = () => {
     }
     const cerrar = () => setPuerta("cerrado")
     const cerrar2 = () => setPuerta2("cerrado")
+
+    const registrarMovimiento = async (tipo, producto, cantidad,precio) => {
+    try {
+        const nuevoMovimiento = {
+            listadoId,
+            tipo,
+            producto,
+            precio:Number(precio),
+            cantidad: Number(cantidad),
+            fecha: new Date()
+        };
+
+        const res = await axios.post(
+        "https://login-backend-v24z.onrender.com/movimientos",
+        nuevoMovimiento
+        );
+
+        // actualiza el estado con lo que viene de la DB
+        setHistorial(prev => [res.data, ...prev]);
+
+    } catch (error) {
+        console.error("Error al registrar movimiento", error);
+    }
+    };
+
+
     const venta = async (e) => {
         e.preventDefault();
 
@@ -84,7 +110,7 @@ const Inicio = () => {
         prev.map(p => (p._id === producto._id ? res.data : p))
         );
 
-        registrarMovimiento("VENTA", producto.nombre, cantidadVenta);
+        registrarMovimiento("VENTA", producto.nombre, cantidadVenta, producto.precio);
         setIdVenta("");
         setCantidadVenta("");
     };
@@ -108,9 +134,9 @@ const Inicio = () => {
         prev.map(p => (p._id === producto._id ? res.data : p))
         );
 
-        registrarMovimiento("VENTA", producto.nombre, cantidadCompra);
-        setIdVenta("");
-        setCantidadVenta("");
+        registrarMovimiento("COMPRA", producto.nombre, cantidadCompra, producto.costo);
+        setIdCompra("");
+        setCantidadCompra("");
     };
 
 
@@ -127,6 +153,10 @@ const Inicio = () => {
     /* =========================
         MÉTRICAS
     ========================= */
+
+    const totalGeneral = productos.reduce((acc, p) => acc + p.cantidad * p.precio, 0)
+    const costoGeneral = productos.reduce((acc, p) => acc + p.cantidad * p.costo, 0)
+    
   const totalProductos = productos.length
   console.log(productos);
     const haceUnaSemana = new Date()
@@ -164,19 +194,19 @@ return (
         <div className="cards">
             <h3>{totalVentas}</h3>
             <h4>Ventas</h4>
-            <Link to="/inventario"><FontAwesomeIcon icon={faArrowTrendUp} /> Ver en el inventario</Link>
+            <Link to="/grafico"><FontAwesomeIcon icon={faArrowTrendUp} /> GRAFICO</Link>
         </div>
 
         <div className="cards">
             <h3>{ventasUltimaSemana.length}</h3>
             <h4>Ventas de la semana</h4>
-            <Link to="/inventario"><FontAwesomeIcon icon={faArrowTrendUp} /> Ver en el inventario</Link>
+            <Link to="/inventario"><FontAwesomeIcon icon={faArrowTrendUp} /> MOVIMIENTOS</Link>
         </div>
 
         <div className="cards">
             <h3>{totalProductos}</h3>
             <h4>Productos</h4>
-            <Link to="/inventario"><FontAwesomeIcon icon={faArrowTrendUp} /> Ver en el inventario</Link>
+            <Link to="/productos"><FontAwesomeIcon icon={faArrowTrendUp} /> PRODUCTOS</Link>
         </div>
 
         <div className="ValoInventario">
@@ -184,7 +214,7 @@ return (
 
             <div className="venta">
             <div className="venta-palabra">Venta</div>
-            <div className="venta-numero">—</div>
+            <div className="venta-numero">{totalGeneral}</div>
         </div>
         </div>
     </div>

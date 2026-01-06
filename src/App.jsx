@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import Home from "./pages/Home";
-import Usuarios from "./pages/Usuario";
+import Graficos from "./pages/Graficos";
 import Inventario from "./pages/Inventario";
 import Log from "./pages/Log";
 import Inicio from "./pages/Inicio";
@@ -11,12 +11,13 @@ function App() {
       <nav>
           <Link to="/inicio">Inicio</Link> |
           <Link to="/inventario">Movimientos</Link> |
-          <Link to="/productos">Productos</Link>
+          <Link to="/productos">Productos</Link>  |
+          <Link to="/graficos">Graficos</Link>
       </nav>
 
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/usuarios" element={<Usuarios />} />
+        <Route path="/graficos" element={<Graficos />} />
         <Route path="/inventario" element={<Inventario />} />
         <Route path="/productos" element={<Productos />} />
         <Route path="/log" element={<Log />} />

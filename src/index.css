@@ -407,6 +407,10 @@ ol{
   .contenedor-supremo .historial ul .venta{
     list-style: circle;
   }
+  
+
+
+
   .contenedor-supremo .Right ol{
     padding: 0;
     justify-content: center;
@@ -487,7 +491,22 @@ ol{
   list-style: none;
   padding: 0;
 }
+.contenedor-stock #busqueda{
+  width: 40vw;
+  height: 25px;
+  border-radius: 5px;
+  border: solid 1px white;
+  background-color: #0c0c0c;
+  padding: 5px;
+}
 
+.stock-extra{
+  text-align: end;
+}
+.stock-extra .iconosMod a{
+  padding: 2.5px;
+  cursor: pointer;
+}
 .item-stock {
   display: flex;
   justify-content: space-between;
@@ -504,6 +523,7 @@ ol{
 .item-stock.bajo {
   border-left: 6px solid #dc2626;
   border-bottom: solid 2px #dc2626;
+
 }
 
 .item-stock.medio {
@@ -540,4 +560,29 @@ ol{
   border: solid rgb(79, 18, 136) 3px;
   scale: 1.2;
   transition: 0.3s;
+}
+
+.grafico-general{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.contenedor-grafico {
+  max-width: 800px;     /* tamaño en desktop */
+  margin: 0 auto;
+}
+.contenedor-grafico canvas {
+  height: 320px !important;
+}
+
+@media (max-width: 768px) {
+  .contenedor-grafico {
+    max-width: 100%;
+    padding: 0 10px;
+  }
+
+  .contenedor-grafico canvas {
+    height: 260px !important;
+  }
 }

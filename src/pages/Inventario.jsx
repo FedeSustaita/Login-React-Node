@@ -21,6 +21,7 @@ const Inventario = () => {
     const [precio, setPrecio] = useState("");
     const [stockEst, setStockEst] = useState("");
     const [descripcion, setDescripcion] = useState("");
+    const [costo, setCosto] = useState("");
 
     const [idVenta, setIdVenta] = useState("");
     const [cantidadVenta, setCantidadVenta] = useState("");
@@ -34,6 +35,7 @@ const Inventario = () => {
     const [precioMod, setPrecioMod] = useState("")
     const [descripcionMod, setDescripcionMod] = useState("")
     const [stockEstMod, setStockEstMod] = useState("")
+    const [costoMod, setCostoMod] = useState("")
   // 🚀 cargar productos
     useEffect(() => {
     if (!listadoId) return;
@@ -61,12 +63,13 @@ const Inventario = () => {
 
 
   // 📜 historial
-    const registrarMovimiento = async (tipo, producto, cantidad) => {
+    const registrarMovimiento = async (tipo, producto, cantidad,precio) => {
     try {
         const nuevoMovimiento = {
           listadoId,
           tipo,
           producto,
+          precio:Number(precio),
           cantidad: Number(cantidad),
           fecha: new Date()
         };
@@ -95,7 +98,8 @@ const Inventario = () => {
       cantidad: Number(cantidad),
       precio: Number(precio),
       stockEst: Number(stockEst),
-      descripcion
+      descripcion,
+      costo: Number(costo)
     };
 
     const res = await axios.post(
@@ -104,7 +108,7 @@ const Inventario = () => {
     );
 
     setProductos(prev => [...prev, res.data]);
-    await registrarMovimiento("CARGA", nombre, cantidad);
+    await registrarMovimiento("CARGA", nombre, cantidad, precio);
 
 
     setNombre("");
@@ -112,6 +116,7 @@ const Inventario = () => {
     setPrecio("");
     setStockEst("");
     setDescripcion("");
+    setCosto("");
   };
 
   // 💸 VENTA
@@ -135,7 +140,7 @@ const Inventario = () => {
       prev.map(p => (p._id === producto._id ? res.data : p))
     );
 
-    await registrarMovimiento("VENTA", producto.nombre, cantidadVenta);
+    await registrarMovimiento("VENTA", producto.nombre, cantidadVenta, producto.precio);
     setIdVenta("");
     setCantidadVenta("");
   };
@@ -159,11 +164,11 @@ const Inventario = () => {
       prev.map(p => (p._id === producto._id ? res.data : p))
     );
 
-    await registrarMovimiento("COMPRA", producto.nombre, cantidadCompra);
+    await registrarMovimiento("COMPRA", producto.nombre, cantidadCompra, producto.costo);
     setIdVenta("");
     setCantidadVenta("");
   };
-    const modificar = async (e) => {
+  const modificar = async (e) => {
     e.preventDefault();
 
     if (!idMod) return;
@@ -176,7 +181,8 @@ const Inventario = () => {
             cantidad: Number(cantidadMod),
             precio: Number(precioMod),
             stockEst: Number(stockEstMod),
-            descripcion: descripcionMod
+            descripcion: descripcionMod,
+            costo: Number(costo),
         }
         );
 
@@ -187,7 +193,8 @@ const Inventario = () => {
         await registrarMovimiento(
             "MODIFICACIÓN",
             res.data.nombre,
-            cantidadMod
+            cantidadMod,
+            res.data.precio 
         );
 
 
@@ -197,15 +204,20 @@ const Inventario = () => {
         setPrecioMod("");
         setStockEstMod("");
         setDescripcionMod("");
+        setCostoMod("");
     } catch (error) {
         console.error("Error al modificar producto", error);
     }
-    };
+  };
 
   // 🗑 ELIMINAR
     const eliminar = async (id) => {
+        const productoLista = productos.find(p => p._id === id);
+        if (!productoLista) return;
+        const { nombre, cantidad, precio } = productoLista;
         await axios.delete(`https://login-backend-v24z.onrender.com/productos/${id}`);
         setProductos(prev => prev.filter(p => p._id !== id));
+        await registrarMovimiento("ELIMINAR", nombre, cantidad, precio);
     };
 
   if (!isLoggedIn) return <Navigate to="/" replace />;
@@ -224,8 +236,11 @@ const Inventario = () => {
             <label>Cantidad</label>
             <input type="number" value={cantidad} onChange={e => setCantidad(e.target.value)} required />
             <br />
-            <label>Precio</label>
+            <label>Precio Unitario</label>
             <input type="number" value={precio} onChange={e => setPrecio(e.target.value)} required />
+            <br />
+            <label>Costo Unitario</label>
+            <input type="number" value={costo} onChange={e => setCosto(e.target.value)} required />
             <br />
             <label>Descripcion</label>
             <input type="text" value={descripcion} onChange={e => setDescripcion(e.target.value)} required />
@@ -278,10 +293,13 @@ const Inventario = () => {
                 <label>Cantidad</label>
                 <input type="number" value={cantidadMod} onChange={e => setCantidadMod(e.target.value)} required />
                 <br />
-                <label>Precio</label>
+                <label>Precio Unitario</label>
                 <input type="number" value={precioMod} onChange={e => setPrecioMod(e.target.value)} required />
                 <br />
-                <label>Precio</label>
+                <label>Costo Unitario</label>
+                <input type="number" value={costoMod} onChange={e => setCostoMod(e.target.value)} required />
+                <br />
+                <label>Descripcion</label>
                 <input type="text" value={descripcionMod} onChange={e => setDescripcionMod(e.target.value)} required />
                 <br />
                 <label>Stock Estadar</label>
@@ -295,7 +313,7 @@ const Inventario = () => {
                 <ul>
                 {historial.map((h, i) => (
                     <li key={i} className={`mov ${h.tipo.toLowerCase()}`}>
-                    <strong>{h.tipo}</strong> | {h.producto} | Cantidad: {h.cantidad}
+                    <strong>{h.tipo}</strong>  {h.producto} | Cantidad: {h.cantidad} | Precio: {h.precio}
                     <small>{new Date(h.fecha).toLocaleString()}</small>
                     </li>
                 ))}
