@@ -189,7 +189,7 @@ const Inicio = () => {
 return (
     <>
     <h1>Home</h1>
-    <button onClick={logout}>Cerrar</button>
+    <button onClick={logout}>🔒 Cerrar Sesion</button>
     <div className="contenedor">
         <div className="cards">
             <h3>{totalVentas}</h3>
