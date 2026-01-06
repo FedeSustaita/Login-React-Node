@@ -3,8 +3,13 @@ import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
+
+  BarController,
   BarElement,
+
+  LineController,
   LineElement,
+
   PointElement,
   Title,
   Tooltip,
@@ -15,8 +20,13 @@ import { Chart } from "react-chartjs-2";
 ChartJS.register(
   CategoryScale,
   LinearScale,
+
+  BarController,
   BarElement,
+
+  LineController,
   LineElement,
+
   PointElement,
   Title,
   Tooltip,
@@ -27,7 +37,7 @@ const VentasVsCompras = ({ historial }) => {
   const datosProcesados = useMemo(() => {
     const productos = {};
 
-    historial.forEach(item => {
+    historial.forEach((item) => {
       if (!productos[item.producto]) {
         productos[item.producto] = { ventas: 0, compras: 0 };
       }
@@ -41,7 +51,6 @@ const VentasVsCompras = ({ historial }) => {
       }
     });
 
-    // Convertimos a array y ordenamos por ventas
     return Object.entries(productos)
       .map(([producto, valores]) => ({
         producto,
@@ -51,9 +60,9 @@ const VentasVsCompras = ({ historial }) => {
       .sort((a, b) => b.ventas - a.ventas);
   }, [historial]);
 
-  const labels = datosProcesados.map(i => i.producto);
-  const datosVentas = datosProcesados.map(i => i.ventas);
-  const datosCompras = datosProcesados.map(i => i.compras);
+  const labels = datosProcesados.map((i) => i.producto);
+  const datosVentas = datosProcesados.map((i) => i.ventas);
+  const datosCompras = datosProcesados.map((i) => i.compras);
 
   const data = {
     labels,
@@ -62,13 +71,13 @@ const VentasVsCompras = ({ historial }) => {
         type: "bar",
         label: "Compras",
         data: datosCompras,
-        backgroundColor: "rgba(34, 197, 94, 0.7)" // 🟢 verde
+        backgroundColor: "rgba(34, 197, 94, 0.7)"
       },
       {
         type: "line",
         label: "Ventas",
         data: datosVentas,
-        borderColor: "rgba(239, 68, 68, 1)", // 🔴 rojo
+        borderColor: "rgba(239, 68, 68, 1)",
         backgroundColor: "rgba(239, 68, 68, 0.2)",
         borderWidth: 2,
         tension: 0.3,
@@ -106,9 +115,7 @@ const VentasVsCompras = ({ historial }) => {
     }
   };
 
-return (
-  <Chart type="bar" data={data} options={options} />
-);
+  return <Chart type="bar" data={data} options={options} />;
 };
 
 export default VentasVsCompras;
