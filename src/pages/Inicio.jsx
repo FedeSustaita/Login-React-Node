@@ -9,7 +9,7 @@ import { faArrowTrendUp,faBoxOpen,faShoppingCart } from "@fortawesome/free-solid
 import axios from "axios"
 
 const Inicio = () => {
-    const { isLoggedIn} = useContext(AuthContext)
+    const { isLoggedIn, logout} = useContext(AuthContext)
 
     const listadoId = JSON.parse(localStorage.getItem("idDeListado"));
     const [productos, setProductos] = useState([])
@@ -189,7 +189,7 @@ const Inicio = () => {
 return (
     <>
     <h1>Home</h1>
-
+    <button onClick={logout}>Cerrar</button>
     <div className="contenedor">
         <div className="cards">
             <h3>{totalVentas}</h3>
