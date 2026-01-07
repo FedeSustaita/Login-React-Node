@@ -126,6 +126,10 @@ const descargarPDF = () => {
     (acc, p) => acc + p.cantidad * p.precio,
     0
   )
+  const costoTotal = productosOrdenados.reduce(
+    (acc, p) => acc + p.cantidad * p.costo,
+    0
+  )
 
   // 📊 RESUMEN
   doc.setFontSize(14)
@@ -135,6 +139,7 @@ const descargarPDF = () => {
   doc.text(`Total de productos: ${totalProductos}`, 14, 60)
   doc.text(`Productos con stock bajo: ${productosBajoStock.length}`, 14, 66)
   doc.text(`Valor total del inventario: $${valorTotal}`, 14, 72)
+  doc.text(`Costo total del inventario: $${costoTotal}`, 14, 78)
 
   // 📋 TABLA PRINCIPAL
   const tableColumn = [
@@ -143,23 +148,26 @@ const descargarPDF = () => {
     "Punto de Reposición",
     "Precio",
     "Valor",
-    "Estado"
+    "Estado",
+    "Costo",
+    "Rentabilidad"
   ]
 
   const tableRows = productosOrdenados.map(p => {
+    let rentabilidad =(((p.precio - p.costo)/p.costo)*100).toFixed(2)
     const valor = p.cantidad * p.precio
     let estado = "OK"
-
     if (p.cantidad < p.stockEst) estado = "MEDIO"
     if (p.cantidad/p.stockEst < 0.5) estado = "CRÍTICO"
-
     return [
       p.nombre,
       p.cantidad,
       p.stockEst,
       `$${p.precio}`,
       `$${valor}`,
-      estado
+      estado,
+      `$${p.costo}`,
+      `${rentabilidad}%`
     ]
   })
 
