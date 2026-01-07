@@ -196,7 +196,7 @@ return (
         <div className="cards">
             <h3>{totalVentas}</h3>
             <h4>Ventas</h4>
-            <Link to="/grafico"><FontAwesomeIcon icon={faArrowTrendUp} /> GRAFICO</Link>
+            <Link to="/graficos"><FontAwesomeIcon icon={faArrowTrendUp} /> GRAFICO</Link>
         </div>
 
         <div className="cards">

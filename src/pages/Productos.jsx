@@ -16,7 +16,9 @@ const Productos = () => {
   const [historial, setHistorial] = useState([])
   const [busquedaProdu, setBusquedaProdu] = useState("")
   const [productosFiltrados, setProductosFiltrados] = useState([])
-
+  const nombre = isLoggedIn
+    ? JSON.parse(localStorage.getItem("usuario"))
+    : null;
   // 🔽🔼 ORDEN
   const [orden, setOrden] = useState("--")
   const [direccion, setDireccion] = useState("asc") // asc | desc
@@ -102,32 +104,106 @@ const Productos = () => {
   })
 
   // PDF
-  const descargarPDF = () => {
-    const doc = new jsPDF()
+const descargarPDF = () => {
+  const doc = new jsPDF()
 
-    doc.setFontSize(18)
-    doc.text("Stock Completo", 14, 20)
-    doc.setFontSize(11)
-    doc.text(`Fecha: ${new Date().toLocaleDateString("es-AR")}`, 14, 28)
+  // 📌 ENCABEZADO
+  doc.setFontSize(18)
+  doc.text("Reporte de Stock Completo", 14, 20)
 
-    const tableColumn = ["Producto", "Cantidad", "Stock Ideal", "Precio"]
+  doc.setFontSize(11)
+  doc.text(`Fecha: ${new Date().toLocaleDateString("es-AR")}`, 14, 28)
+  doc.text("Sistema: Inventory & Sales System", 14, 34)
+  doc.text(`Generado por: ${nombre}`, 14, 40)
 
-    const tableRows = productosOrdenados.map(p => [
+  // 📊 DATOS CALCULADOS
+  const totalProductos = productosOrdenados.length
+  const productosBajoStock = productosOrdenados.filter(
+    p => p.cantidad < p.stockEst
+  )
+
+  const valorTotal = productosOrdenados.reduce(
+    (acc, p) => acc + p.cantidad * p.precio,
+    0
+  )
+
+  // 📊 RESUMEN
+  doc.setFontSize(14)
+  doc.text("Resumen", 14, 52)
+
+  doc.setFontSize(11)
+  doc.text(`Total de productos: ${totalProductos}`, 14, 60)
+  doc.text(`Productos con stock bajo: ${productosBajoStock.length}`, 14, 66)
+  doc.text(`Valor total del inventario: $${valorTotal}`, 14, 72)
+
+  // 📋 TABLA PRINCIPAL
+  const tableColumn = [
+    "Producto",
+    "Stock",
+    "Punto de Reposición",
+    "Precio",
+    "Valor",
+    "Estado"
+  ]
+
+  const tableRows = productosOrdenados.map(p => {
+    const valor = p.cantidad * p.precio
+    let estado = "OK"
+
+    if (p.cantidad < p.stockEst) estado = "MEDIO"
+    if (p.cantidad/p.stockEst < 0.5) estado = "CRÍTICO"
+
+    return [
       p.nombre,
       p.cantidad,
       p.stockEst,
-      `$${p.precio}`
+      `$${p.precio}`,
+      `$${valor}`,
+      estado
+    ]
+  })
+
+  autoTable(doc, {
+    startY: 80,
+    head: [tableColumn],
+    body: tableRows,
+    styles: { fontSize: 10 },
+    headStyles: { fillColor: [30, 30, 30] }
+  })
+
+  // ⚠️ STOCK BAJO
+  if (productosBajoStock.length > 0) {
+    doc.addPage()
+
+    doc.setFontSize(16)
+    doc.text("Productos con Stock Medio/Bajo", 14, 20)
+
+    const lowStockRows = productosBajoStock.map(p => [
+      p.nombre,
+      p.cantidad,
+      p.stockEst,
+      p.stockEst - p.cantidad
     ])
 
     autoTable(doc, {
-      startY: 35,
-      head: [tableColumn],
-      body: tableRows,
+      startY: 30,
+      head: [["Producto", "Stock", "Ideal", "Faltante"]],
+      body: lowStockRows,
       styles: { fontSize: 10 }
     })
-
-    doc.save("stock-completo.pdf")
   }
+
+  // 🧾 PIE
+  doc.setFontSize(10)
+  doc.text(
+    "Reporte generado automáticamente por el sistema",
+    14,
+    doc.internal.pageSize.height - 10
+  )
+
+  doc.save("stock-completo.pdf")
+}
+
 
   if (!isLoggedIn) return <Navigate to="/" replace />
 

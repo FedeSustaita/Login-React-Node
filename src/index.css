@@ -120,6 +120,15 @@ li{
   text-align: start;
 }
 
+.contenedor-log{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.mensaje-exito{
+  color: #00ff0d;
+}
 .Right{
   display: flex;
   flex-direction: column;

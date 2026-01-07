@@ -39,6 +39,7 @@ const Home = () => {
     // 👉 SOLO guardamos sesión + listadoId
     localStorage.setItem("idDeListado",JSON.stringify(encontrado.idDeListado));
     localStorage.setItem("usuario",JSON.stringify(encontrado.username));
+    localStorage.setItem("empresa",JSON.stringify(encontrado.empresa));
 
     login(encontrado.idDeListado);
     navigate("/inicio");
