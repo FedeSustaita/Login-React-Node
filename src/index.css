@@ -20,18 +20,66 @@ body{
 }
 nav{
   display: flex;
-  justify-content: end;
+  justify-content: space-between;
   align-items: center;
   height: 80px;
   background-color: rgb(12, 12, 12);
   border-radius: 0 0 20px 20px;
+  backdrop-filter: blur(6px);
+}
+nav h4{
+  padding: 10px;
+  padding-left: 20px;
+}
+.usuario h4{
+  margin-bottom: 0;
+  margin-top: 0;
+  padding-bottom: 5px;
+  padding-top: 0;
 }
 nav a{
-  margin: 5px;
+  margin: 10px;
   text-decoration: none;
+}
+nav a:visited{
+  color: #9b9b9b;
+}
+nav a:hover{
+  color: rgb(218, 218, 218);
+  transition: all 0.4s;
+  border-bottom: solid 1.5px #4f46e5;
+}
+.link.active {
+  color: #fff;
+  border-bottom: solid #4f46e5;
+  font-weight: bold;
 }
 h1{
   text-align: center;
+}
+.bienvenida{
+  margin-bottom: 5px;
+}
+.bienvenida-baja{
+  margin-top: 5px;
+}
+.cerrar-sesion{
+  margin-bottom: 15px;
+}
+button{
+  border: none;
+  width: auto;
+  height: 40px;
+  border-radius: 10px;
+  background-color: rgb(40, 40, 40);
+  color: white;
+  padding: 5px;
+}
+button:hover{
+  border: solid #8787ff 1px;
+  box-shadow: 0px 0px 5px #6464ff;
+  scale: 1.1;
+  transition: 0.3s;
 }
 .content-form{
   display: flex;
@@ -41,6 +89,11 @@ form{
   border: solid;
   padding: 10px;
   width: 35vw;
+  background: linear-gradient(180deg, #1e1e1e, #151515);
+  border-radius: 12px;
+  padding: 16px 20px;
+  box-shadow: 0 12px 25px rgba(0,0,0,.45);
+  border: 1px solid rgba(255,255,255,.05);
 }
 form button{
   border: none;
@@ -51,7 +104,7 @@ form button{
   color: white;
 }
 form button:hover{
-  border: solid rgb(79, 18, 136) 3px;
+  border: solid #8787ff 1px;
   scale: 1.1;
   transition: 0.3s;
 }
@@ -111,12 +164,17 @@ ol{
   border: solid 2px;
   width: 150px;
   margin: 5px;
+  background: linear-gradient(180deg, #1e1e1e, #151515);
+  border-radius: 12px;
+  box-shadow: 0 12px 25px rgba(0,0,0,.45);
+  border: 1px solid rgba(255,255,255,.05);
 }
 .card-prod .main{
   display: flex;
   justify-content: center;
   flex-direction: column;
   align-items: center;
+  
 }
 .card-prod .footer{
   display: flex;
@@ -181,8 +239,17 @@ ol{
 .cards{
   height: 120px;
   width: 12vw;
-  background-color: #1E1E1E;
-  border-radius: 7px;
+  background: linear-gradient(180deg, #1e1e1e, #151515);
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,.05);
+  box-shadow: 0 10px 10px rgba(0,0,0,0.4);
+  transition: 
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+}
+.cards:hover{
+  transform: translateY(-6px) scale(1.05);
+  box-shadow: 0 18px 30px rgba(0,0,0,0.6);
 }
 .cards h3{
   font-size: 40px;
@@ -193,24 +260,37 @@ ol{
 }
 .cards h4{
   margin: 0px;
+  font-size: 15px;
+  font-weight: bold;
 }
 .cards a{
+  font-size: 12px;
   font-weight: bold;
-  font-size: 13px;
+  padding-bottom: 5px;
 }
 .cards a:visited{
-  color: white;
+  color: rgb(135, 135, 255);
 }
 .ValoInventario{
   text-align: start;
 }
 .ValoInventario h3{
-  font-weight: 600;
+  font-weight: bold;
 }
 .ValoInventario .venta{
-  border: solid rgb(8, 8, 8) 1px;
-  background-color: rgb(8, 8, 8);
   margin-bottom: 10px;
+  box-shadow: 0 10px 10px rgba(0,0,0,0.4);
+  transition: 
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+  background: linear-gradient(180deg, #1e1e1e, #151515);
+  border-radius: 12px;
+  padding: 8px 2px;
+  border: 1px solid rgba(255,255,255,.05);
+}
+.venta:hover{
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 18px 30px rgba(0,0,0,0.6);
 }
 .venta{
   display: flex;
@@ -233,16 +313,21 @@ ol{
   flex-direction: row;
   justify-content: space-around;
   align-items: center;
-  margin-top: 20px;
-  margin-bottom: 20px;
+  margin-top: 40px;
+  margin-bottom: 40px;
 }
 
 .contenedor-chico{
   width: 30vw;
   margin: 10px;
-  border: solid 1px;
-  border-radius: 5px;
-  box-shadow: 5px 5px 5px rgb(5, 5, 5);
+  transition: 
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+  background: linear-gradient(180deg, #1e1e1e, #151515);
+  border-radius: 12px;
+  padding: 16px 20px;
+  box-shadow: 0 12px 25px rgba(0,0,0,.45);
+  border: 1px solid rgba(255,255,255,.05);
 }
 .contenedor-chico ul li{
   display: flex;
@@ -280,13 +365,17 @@ ol{
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  margin-top: 40px;
+  margin-bottom: 40px;
 }
 .conten-interno{
   width: 60vw;
   height: 150px;
-  border: solid 1px;
-  border-radius: 5px;
-
+  background: linear-gradient(180deg, #1e1e1e, #151515);
+  border-radius: 12px;
+  padding: 16px 20px;
+  box-shadow: 0 12px 25px rgba(0,0,0,.45);
+  border: 1px solid rgba(255,255,255,.05);
 }
 .conten-interno button{
   width: 15vw;
@@ -305,6 +394,10 @@ ol{
   align-items: center;
   font-weight: bold;
 }
+.conten-interno .conten-botones .venta:hover{
+  border: solid #00ff0d 1px;
+  box-shadow: 0px 0px 10px #00ff0d;
+}
 .venta svg, .compra svg{
   padding: 5px;
 }
@@ -319,7 +412,10 @@ ol{
   font-weight: bold;
 }
 
-
+.conten-interno .conten-botones .compra:hover{
+  border: solid #0059ff 1px;
+  box-shadow: 0px 0px 10px #0059ff;
+}
 
 
 
@@ -333,6 +429,7 @@ ol{
 
 
 @media (max-width: 600px) {
+
   /* home */
   .contenedor{
     display: flex;
@@ -349,6 +446,15 @@ ol{
     justify-content: center;
     align-items: center;
   }
+  .contenedor .ValoInventario .venta{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 8px;
+    width: auto;
+  }
+
   .contenedor-main{
     display: flex;
     flex-direction: column;
@@ -384,6 +490,13 @@ ol{
   /* inventario */
   nav{
     justify-content: center;
+    flex-direction: column;
+    height: auto;
+    padding: 10px;
+  }
+  nav h4{
+    margin: 5px;
+    padding: 10px;
   }
   .contenedor-supremo{
     display: flex;
@@ -416,7 +529,30 @@ ol{
     justify-content: center;
   }
   .contenedor-supremo .aside form{
-    width: 70vw;
+    width: 80vw;
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+  .contenedor-supremo .aside form input{
+    width: 60vw;
+  }
+  .contenedor-supremo .aside form select{
+    margin-bottom: 5px;
+  }
+
+  .contenedor-supremo .historial small{
+    text-align: center;
+  }
+
+
+
+
+  .grafico-general p {
+    text-align: start;
+    padding: 10px;
   }
 }
 
@@ -427,12 +563,23 @@ ol{
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  
 }
 .contenedor-ventas-interno-tabla ul{
   padding: 0;
   width: 60vw;
-  border: solid 1px #e5e7eb;
   padding: 5px;
+  transition: 
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+  background: linear-gradient(180deg, #1e1e1e, #151515);
+  border-radius: 12px;
+  padding: 16px 20px;
+  box-shadow: 0 12px 25px rgba(0,0,0,.45);
+  border: 1px solid rgba(255,255,255,.05);
+}
+.contenedor-ventas-interno-tabla ul li{
+  border-bottom: solid rgb(51, 51, 51);
 }
 
 .venta-item {
@@ -484,13 +631,21 @@ ol{
   border: solid;
   width: 70vw;
   border-radius: 10px;
-  padding: 5px;
-
+  padding: 10px;
+  background: linear-gradient(180deg, #1e1e1e, #151515);
+  border-radius: 12px;
+  box-shadow: 0 12px 25px rgba(0,0,0,.45);
+  border: 1px solid rgba(255,255,255,.05);
 }
 .contenedor-main-stock ul {
   list-style: none;
   padding: 0;
 }
+
+.ordenar{
+  margin: 10px;
+}
+
 .contenedor-stock #busqueda{
   width: 40vw;
   height: 25px;

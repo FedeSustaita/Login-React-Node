@@ -145,17 +145,18 @@ const Inicio = () => {
         CARGAR HISTORIAL
         (si todavía lo tenés local)
     ========================= */
-    //   useEffect(() => {
-    //     const data = localStorage.getItem("historial")
-    //     if (data) setHistorial(JSON.parse(data))
-    //   }, [])
+
 
     /* =========================
         MÉTRICAS
     ========================= */
 
-    const totalGeneral = productos.reduce((acc, p) => acc + p.cantidad * p.precio, 0)
-    const costoGeneral = productos.reduce((acc, p) => acc + p.cantidad * p.costo, 0)
+    let totalGeneral = productos.reduce((acc, p) => acc + p.cantidad * p.precio, 0)
+    totalGeneral = new Intl.NumberFormat("es-AR", {
+    style: "currency",
+    currency: "ARS",
+    minimumFractionDigits: 0
+    }).format(totalGeneral)
     
   const totalProductos = productos.length
   console.log(productos);
@@ -188,8 +189,9 @@ const Inicio = () => {
 
 return (
     <>
-    <h1>Home</h1>
-    <button onClick={logout}>🔒 Cerrar Sesion</button>
+    <h1 className="bienvenida">PANEL GENERAL</h1>
+    <h3 className="bienvenida-baja">Inventario y ventas</h3>
+    <button onClick={logout}  className="cerrar-sesion">🔒 Cerrar Sesion</button>
     <div className="contenedor">
         <div className="cards">
             <h3>{totalVentas}</h3>

@@ -36,6 +36,27 @@ const Inventario = () => {
     const [descripcionMod, setDescripcionMod] = useState("")
     const [stockEstMod, setStockEstMod] = useState("")
     const [costoMod, setCostoMod] = useState("")
+    const [limiteHistorial, setLimiteHistorial] = useState(5)
+    const [mostrarTodo, setMostrarTodo] = useState(false)
+    const [ordenHistorial, setOrdenHistorial] = useState("fecha") // fecha | tipo
+
+
+    const historialOrdenado = [...historial].sort((a, b) => {
+  if (ordenHistorial === "fecha") {
+    return new Date(b.fecha) - new Date(a.fecha) // más reciente primero
+  }
+  if (ordenHistorial === "tipo") {
+    return a.tipo.localeCompare(b.tipo)
+  }
+  return 0
+})
+
+const historialVisible = mostrarTodo
+  ? historialOrdenado
+  : historialOrdenado.slice(0, limiteHistorial)
+
+
+
   // 🚀 cargar productos
     useEffect(() => {
     if (!listadoId) return;
@@ -309,15 +330,41 @@ const Inventario = () => {
             </form>
 
             <div className="historial">
-                <h3>Historial de movimientos</h3>
-                <ul>
-                {historial.map((h, i) => (
-                    <li key={i} className={`mov ${h.tipo.toLowerCase()}`}>
-                    <strong>{h.tipo}</strong>  {h.producto} | Cantidad: {h.cantidad} | Precio: {h.precio}
+              <h3>Historial de movimientos</h3>
+
+              {/* 🔧 CONTROLES */}
+              <div style={{ display: "flex", gap: "10px", marginBottom: "10px" }}>
+                <select
+                  value={ordenHistorial}
+                  onChange={e => setOrdenHistorial(e.target.value)}
+                >
+                  <option value="fecha">Ordenar por fecha</option>
+                  <option value="tipo">Ordenar por tipo</option>
+                </select>
+
+                {!mostrarTodo && (
+                  <>
+                    <button onClick={() => setLimiteHistorial(5)}>Últimos 5</button>
+                    <button onClick={() => setLimiteHistorial(10)}>Últimos 10</button>
+                  </>
+                )}
+
+                <button onClick={() => setMostrarTodo(prev => !prev)}>
+                  {mostrarTodo ? "Mostrar menos" : "Mostrar todo"}
+                </button>
+              </div>
+
+              {/* 📜 LISTA */}
+              <ul>
+                {historialVisible.map((h, i) => (
+                  <li key={i} className={`mov ${h.tipo.toLowerCase()}`}>
+                    <strong>{h.tipo}</strong> {h.producto} | Cant: {h.cantidad} | $
+                    {h.precio}
+                    <br />
                     <small>{new Date(h.fecha).toLocaleString()}</small>
-                    </li>
+                  </li>
                 ))}
-                </ul>
+              </ul>
             </div>
         </div>
 
