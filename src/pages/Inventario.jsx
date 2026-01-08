@@ -71,8 +71,6 @@ const historialVisible = mostrarTodo
         setProductos(resProductos.data);
         setHistorial(resHistorial.data);
 
-        console.log("Productos:", resProductos.data);
-        console.log("Historial:", resHistorial.data);
 
         } catch (error) {
         console.error(error);

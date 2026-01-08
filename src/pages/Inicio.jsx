@@ -31,8 +31,6 @@ const Inicio = () => {
         setProductos(resProductos.data);
         setHistorial(resHistorial.data);
 
-        console.log("Productos:", resProductos.data);
-        console.log("Historial:", resHistorial.data);
 
         } catch (error) {
         console.error(error);
@@ -159,7 +157,6 @@ const Inicio = () => {
     }).format(totalGeneral)
     
   const totalProductos = productos.length
-  console.log(productos);
     const haceUnaSemana = new Date()
     haceUnaSemana.setDate(haceUnaSemana.getDate() - 7)
     const ventasUltimaSemana = historial.filter(m => m.tipo === "VENTA" && new Date(m.fecha) >= haceUnaSemana)
@@ -184,7 +181,6 @@ const Inicio = () => {
     return <Navigate to="/" replace />
   }
 
-    console.log("listadoId desde context:", listadoId);
 
 
 return (

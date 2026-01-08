@@ -6,7 +6,7 @@ import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import {} from "@fortawesome/free-regular-svg-icons"
-import { faMagnifyingGlass, faTrash, faPenToSquare, faArrowUpWideShort, faArrowDownWideShort } from "@fortawesome/free-solid-svg-icons"
+import { faMagnifyingGlass, faTrash, faArrowUpWideShort, faArrowDownWideShort } from "@fortawesome/free-solid-svg-icons"
 
 const Productos = () => {
   const { isLoggedIn } = useContext(AuthContext)
@@ -22,8 +22,8 @@ const Productos = () => {
   // 🔽🔼 ORDEN
   const [orden, setOrden] = useState("--")
   const [direccion, setDireccion] = useState("asc") // asc | desc
+  const [inventario, setInventario] = useState("")
 
-  console.log("productos ", productos)
 
   useEffect(() => {
     if (!listadoId) return
@@ -57,39 +57,107 @@ const Productos = () => {
     setProductosFiltrados(elementos)
   }, [busquedaProdu, productos])
 
-  const registrarMovimiento = async (tipo, producto, cantidad) => {
-    try {
-      const nuevoMovimiento = {
-        listadoId,
-        tipo,
-        producto,
-        cantidad: Number(cantidad),
-        fecha: new Date()
-      }
-
-      const res = await axios.post(
-        "https://login-backend-v24z.onrender.com/movimientos",
-        nuevoMovimiento
-      )
-
-      setHistorial(prev => [res.data, ...prev])
-    } catch (error) {
-      console.error("Error al registrar movimiento", error)
+const registrarMovimiento = async (tipo, producto, cantidad, precio) => {
+  try {
+    const nuevoMovimiento = {
+      listadoId,
+      tipo,
+      producto,
+      cantidad: Number(cantidad),
+      precio: Number(precio)
     }
+
+    const res = await axios.post(
+      "https://login-backend-v24z.onrender.com/movimientos",
+      nuevoMovimiento
+    )
+
+    setHistorial(prev => [res.data, ...prev])
+  } catch (error) {
+    console.error(
+      "Error al registrar movimiento",
+      error.response?.data || error
+    )
   }
+}
+
+
+
+
+
+  const cargarProductoDesdeJSON = async (prod) => {
+    if (
+      !prod.nombre ||
+      prod.cantidad == null ||
+      prod.precio == null ||
+      prod.stockEst == null
+    ) {
+      console.warn("Producto inválido:", prod)
+      return
+    }
+
+    const nuevo = {
+      listadoId,
+      nombre: prod.nombre,
+      cantidad: Number(prod.cantidad),
+      precio: Number(prod.precio),
+      stockEst: Number(prod.stockEst),
+      descripcion: prod.descripcion,
+      costo: Number(prod.costo)
+    }
+
+    const res = await axios.post(
+      "https://login-backend-v24z.onrender.com/productos",
+      nuevo
+    )
+
+    setProductos(prev => [...prev, res.data])
+    await registrarMovimiento("CARGA", prod.nombre, prod.cantidad, prod.precio)
+  }
+
+
+  const manejarCargaInventario = async (e) => {
+    e.preventDefault()
+
+    let invent
+    try {
+      invent = JSON.parse(inventario)
+    } catch {
+      alert("JSON inválido")
+      return
+    }
+
+    if (!Array.isArray(invent)) {
+      alert("Debe ser un arreglo de productos")
+      return
+    }
+
+    for (const prod of invent) {
+      await cargarProductoDesdeJSON(prod)
+    }
+
+    setInventario("")
+  }
+
+
+
+
+
+
+
 
   const eliminar = async (id) => {
     const productoLista = productos.find(p => p._id === id)
     if (!productoLista) return
 
-    const { nombre, cantidad } = productoLista
+    const { nombre, cantidad, precio } = productoLista
     const confirmado = window.confirm(`¿Estás seguro que querés eliminar "${nombre}"?`)
     if (!confirmado) return
 
     setProductosFiltrados([])
     await axios.delete(`https://login-backend-v24z.onrender.com/productos/${id}`)
     setProductos(prev => prev.filter(p => p._id !== id))
-    await registrarMovimiento("ELIMINAR", nombre, cantidad)
+    await registrarMovimiento("ELIMINAR", nombre, cantidad, precio)
   }
 
   // 🔁 ORDENAMIENTO (con dirección)
@@ -341,6 +409,82 @@ const descargarPDF = () => {
       <button onClick={descargarPDF} className="btn-pdf">
         📄 Descargar PDF
       </button>
+      <form onSubmit={manejarCargaInventario}>
+        <label>Ingresar inventario</label>
+        <textarea rows={5} value={inventario} name="inve" id="inve" onChange={e=>setInventario(e.target.value)} placeholder='[ { "nombre": "...", "cantidad": 1, ... } ]'/>
+        <button type="submit">Enviar</button>
+      </form>
+      <div style={{ maxWidth: "900px", padding: "16px", fontFamily: "Arial" }}>
+        <h2>📦 Carga automática de productos con ChatGPT</h2>
+
+        <p>
+          Copiá el siguiente prompt y pegalo en ChatGPT junto con tu listado de productos.
+          ChatGPT te devolverá un <b>JSON listo para importar</b>.
+        </p>
+
+        <h3>🧾 Datos obligatorios por producto</h3>
+        <ul>
+          <li><b>nombre</b> (string) → "" si falta</li>
+          <li><b>cantidad</b> (number) → 0 si falta</li>
+          <li><b>precio</b> (number) → 0 si falta</li>
+          <li><b>costo</b> (number) → 0 si falta</li>
+          <li><b>stockEst</b> (number) → 0 si falta</li>
+          <li><b>descripcion</b> (string) → "" si falta</li>
+        </ul>
+
+        <h3>🧠 Prompt para ChatGPT</h3>
+
+        <textarea
+          id="prompt-chatgpt"
+          readOnly
+          style={{
+            width: "100%",
+            height: "320px",
+            padding: "12px",
+            fontFamily: "monospace"
+          }}
+          value={`Necesito que tomes un listado de productos y lo transformes en un JSON válido para importar en un sistema de inventario.
+                Reglas OBLIGATORIAS:
+                - Devolvé SOLO JSON
+                - NO agregues texto, explicaciones ni comentarios
+                - El resultado debe ser un ARRAY de productos
+
+                Cada producto debe tener EXACTAMENTE estas propiedades:
+                - nombre (string) → si falta usar ""
+                - cantidad (number) → si falta usar 0
+                - precio (number) → si falta usar 0
+                - costo (number) → si falta usar 0
+                - stockEst (number) → si falta usar 0
+                - descripcion (string) → si falta usar ""
+
+                Si algún dato viene incompleto, corregilo automáticamente.
+                No inventes información, solo completá con valores por defecto.
+
+                Entrada del usuario:
+                (ACÁ VOY A PEGAR MI LISTADO DE PRODUCTOS)
+
+                Salida esperada:
+                Un array JSON válido, listo para ser importado.`}
+        />
+
+        <button
+          onClick={() => {
+            const text = document.getElementById("prompt-chatgpt").value
+            navigator.clipboard.writeText(text)
+            alert("Prompt copiado al portapapeles")
+          }}
+          style={{
+            marginTop: "12px",
+            padding: "10px 16px",
+            cursor: "pointer"
+          }}
+        >
+          📋 Copiar prompt
+        </button>
+      </div>
+
+
+
     </div>
   )
 }
