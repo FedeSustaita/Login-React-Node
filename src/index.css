@@ -650,7 +650,14 @@ ol{
   list-style: none;
   padding: 0;
 }
+.stock-info li{
+  margin-right: 5px;
+}
 
+.variantes-stock ul{
+  display: flex;
+  flex-direction: row;
+}
 .ordenar{
   margin: 10px;
 }

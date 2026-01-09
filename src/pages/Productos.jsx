@@ -14,6 +14,7 @@ const Productos = () => {
   const listadoId = JSON.parse(localStorage.getItem("idDeListado"))
   const [productos, setProductos] = useState([])
   const [historial, setHistorial] = useState([])
+  const [variantes, setVariantes] = useState([]);
   const [busquedaProdu, setBusquedaProdu] = useState("")
   const [productosFiltrados, setProductosFiltrados] = useState([])
   const nombre = isLoggedIn
@@ -25,25 +26,41 @@ const Productos = () => {
   const [inventario, setInventario] = useState("")
 
 
-  useEffect(() => {
-    if (!listadoId) return
+useEffect(() => {
+  if (!listadoId) return;
 
-    const traerDatos = async () => {
-      try {
-        const [resProductos, resHistorial] = await Promise.all([
-          axios.get(`https://login-backend-v24z.onrender.com/productos/listado/${listadoId}`),
-          axios.get(`https://login-backend-v24z.onrender.com/movimientos/listado/${listadoId}`)
-        ])
+  const traerDatos = async () => {
+    try {
+      const [resProductos, resHistorial] = await Promise.all([
+        axios.get(
+          `https://login-backend-v24z.onrender.com/productos/listado/${listadoId}`
+        ),
+        axios.get(
+          `https://login-backend-v24z.onrender.com/movimientos/listado/${listadoId}`
+        )
+      ]);
 
-        setProductos(resProductos.data)
-        setHistorial(resHistorial.data)
-      } catch (error) {
-        console.error(error)
+      setProductos(resProductos.data);
+      setHistorial(resHistorial.data);
+
+      // traer variantes por producto
+      const variantesObj = {};
+      for (const p of resProductos.data) {
+        const res = await axios.get(
+          `https://login-backend-v24z.onrender.com/variantes/producto/${p._id}`
+        );
+        variantesObj[p._id] = res.data;
       }
-    }
 
-    traerDatos()
-  }, [listadoId])
+      setVariantes(variantesObj);
+
+    } catch (error) {
+      console.error("Error al traer datos:", error);
+    }
+  };
+
+  traerDatos();
+}, [listadoId]);
 
   useEffect(() => {
     if (!busquedaProdu) {
@@ -375,7 +392,8 @@ const descargarPDF = () => {
       <div className="contenedor-main-stock">
         <ul>
           {productosOrdenados.map(p => {
-            const ratio = p.cantidad / p.stockEst
+            const ratio = p.cantidad / p.stockEst;
+            const vars = variantes[p._id] || []; // obtener variantes del producto
 
             return (
               <li
@@ -390,7 +408,24 @@ const descargarPDF = () => {
                     Stock: {p.cantidad} / {p.stockEst} | Rentabilidad:{" "}
                     {(((p.precio - p.costo) / p.costo) * 100).toFixed(2)}%
                   </span>
+                  {vars.length > 0 && (
+                    <div className="variantes-stock">
+                      <ul>
+                        {vars.map(v => (
+                          <li key={v._id}>
+                            {Object.entries(v.atributos)
+                              .map(([k, val]) => `${k} ${val}`)
+                              .join(" / ")}{" "}
+                              {"-->"} {v.cantidad} |
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
+
+                {/* VARIANTES */}
+
 
                 <div className="stock-extra">
                   <span className="precio">${p.precio}</span>
@@ -401,10 +436,11 @@ const descargarPDF = () => {
                   </div>
                 </div>
               </li>
-            )
+            );
           })}
         </ul>
       </div>
+
 
       <button onClick={descargarPDF} className="btn-pdf">
         📄 Descargar PDF

@@ -14,31 +14,46 @@ const Inicio = () => {
     const listadoId = JSON.parse(localStorage.getItem("idDeListado"));
     const [productos, setProductos] = useState([])
     const [historial, setHistorial] = useState([])
+    const [variantes, setVariantes] = useState([]);
 
   /* =========================
      CARGAR PRODUCTOS
   ========================= */
-    useEffect(() => {
+useEffect(() => {
     if (!listadoId) return;
 
     const traerDatos = async () => {
         try {
         const [resProductos, resHistorial] = await Promise.all([
-            axios.get(`https://login-backend-v24z.onrender.com/productos/listado/${listadoId}`),
-            axios.get(`https://login-backend-v24z.onrender.com/movimientos/listado/${listadoId}`)
+            axios.get(
+            `https://login-backend-v24z.onrender.com/productos/listado/${listadoId}`
+            ),
+            axios.get(
+            `https://login-backend-v24z.onrender.com/movimientos/listado/${listadoId}`
+            )
         ]);
 
         setProductos(resProductos.data);
         setHistorial(resHistorial.data);
 
+        // traer variantes por producto
+        const variantesObj = {};
+        for (const p of resProductos.data) {
+            const res = await axios.get(
+            `https://login-backend-v24z.onrender.com/variantes/producto/${p._id}`
+            );
+            variantesObj[p._id] = res.data;
+        }
+
+        setVariantes(variantesObj);
 
         } catch (error) {
-        console.error(error);
+        console.error("Error al traer datos:", error);
         }
     };
 
     traerDatos();
-    }, [listadoId]);
+}, [listadoId]);
 
 
     const productosStockBajo = productos.filter(m => (m.cantidad / m.stockEst) < 0.5)
@@ -63,12 +78,13 @@ const Inicio = () => {
     const cerrar = () => setPuerta("cerrado")
     const cerrar2 = () => setPuerta2("cerrado")
 
-    const registrarMovimiento = async (tipo, producto, cantidad,precio) => {
+    const registrarMovimiento = async (tipo, producto, cantidad,precio, variante="") => {
     try {
         const nuevoMovimiento = {
             listadoId,
             tipo,
             producto,
+            variante,
             precio:Number(precio),
             cantidad: Number(cantidad),
             fecha: new Date()
@@ -87,55 +103,139 @@ const Inicio = () => {
     }
     };
 
+// Para manejar la variante seleccionada (si el producto tiene variantes)
+const [idVarianteVenta, setIdVarianteVenta] = useState(""); 
 
-    const venta = async (e) => {
-        e.preventDefault();
+// Para guardar las variantes del producto seleccionado y mostrarlas en el select
+const [varianteSeleccionadas, setVarianteSeleccionadas] = useState([]);
 
-        const producto = productos.find(p => p._id === idVenta);
-        if (!producto) return;
 
-        const nuevaCantidad = Math.max(
-        0,
-        producto.cantidad - Number(cantidadVenta)
-        );
 
-        const res = await axios.put(
-        `https://login-backend-v24z.onrender.com/productos/${producto._id}`,
-        { cantidad: nuevaCantidad }
-        );
 
-        setProductos(prev =>
-        prev.map(p => (p._id === producto._id ? res.data : p))
-        );
 
-        registrarMovimiento("VENTA", producto.nombre, cantidadVenta, producto.precio);
-        setIdVenta("");
-        setCantidadVenta("");
-    };
-    const compra = async (e) => {
-        e.preventDefault();
 
-        const producto = productos.find(p => p._id === idCompra);
-        if (!producto) return;
 
-        const nuevaCantidad = Math.max(
-        0,
-        producto.cantidad + Number(cantidadCompra)
-        );
+const venta = async (e) => {
+  e.preventDefault();
+  if (!idVenta) return;
 
-        const res = await axios.put(
-        `https://login-backend-v24z.onrender.com/productos/${producto._id}`,
-        { cantidad: nuevaCantidad }
-        );
+  const producto = productos.find(p => p._id === idVenta);
+  if (!producto) return;
 
-        setProductos(prev =>
-        prev.map(p => (p._id === producto._id ? res.data : p))
-        );
+  try {
+    if (varianteSeleccionadas.length > 0 && idVarianteVenta) {
+      // restar cantidad de la variante seleccionada
+      const variante = varianteSeleccionadas.find(v => v._id === idVarianteVenta);
+      const nuevaCantidad = Math.max(0, variante.cantidad - Number(cantidadVenta));
 
-        registrarMovimiento("COMPRA", producto.nombre, cantidadCompra, producto.costo);
-        setIdCompra("");
-        setCantidadCompra("");
-    };
+      await axios.put(`https://login-backend-v24z.onrender.com/variantes/${idVarianteVenta}`, {
+        cantidad: nuevaCantidad
+      });
+    } else {
+      // Producto sin variantes
+      const nuevaCantidad = Math.max(0, producto.cantidad - Number(cantidadVenta));
+      await axios.put(`https://login-backend-v24z.onrender.com/productos/${idVenta}`, {
+        cantidad: nuevaCantidad
+      });
+    }
+
+    // 🔄 Refrescar productos y variantes
+    const resProductos = await axios.get(`https://login-backend-v24z.onrender.com/productos/listado/${listadoId}`);
+
+    const variantesObj = {};
+    for (const p of resProductos.data) {
+      const res = await axios.get(`https://login-backend-v24z.onrender.com/variantes/producto/${p._id}`);
+      variantesObj[p._id] = res.data;
+    }
+
+    const productosConVariantes = resProductos.data.map(p => ({
+      ...p,
+      variantes: variantesObj[p._id] || []
+    }));
+    const varianteSeleccionadaTexto = idVarianteVenta
+    ? Object.entries(varianteSeleccionadas.find(v => v._id === idVarianteVenta).atributos)
+        .map(([k, val]) => `${k}: ${val}`)
+        .join(" / ")
+    : "";
+
+
+    setProductos(productosConVariantes);
+    setVariantes(variantesObj);
+
+    // registrar movimiento
+    await registrarMovimiento("VENTA", producto.nombre, cantidadVenta, producto.precio,varianteSeleccionadaTexto);
+
+    // reset
+    setIdVenta("");
+    setIdVarianteVenta("");
+    setCantidadVenta("");
+
+  } catch (error) {
+    console.error("Error en la venta:", error);
+  }
+};
+
+
+
+const compra = async (e) => {
+  e.preventDefault();
+  if (!idCompra) return;
+
+  const producto = productos.find(p => p._id === idCompra);
+  if (!producto) return;
+
+  try {
+    if (varianteSeleccionadas.length > 0 && idVarianteVenta) {
+      // Sumar cantidad a la variante seleccionada
+      const variante = varianteSeleccionadas.find(v => v._id === idVarianteVenta);
+      const nuevaCantidad = variante.cantidad + Number(cantidadCompra);
+
+      await axios.put(`https://login-backend-v24z.onrender.com/variantes/${idVarianteVenta}`, {
+        cantidad: nuevaCantidad
+      });
+    } else {
+      // Producto sin variantes
+      const nuevaCantidad = producto.cantidad + Number(cantidadCompra);
+      await axios.put(`https://login-backend-v24z.onrender.com/productos/${idCompra}`, {
+        cantidad: nuevaCantidad
+      });
+    }
+
+    // 🔄 Refrescar productos y variantes
+    const resProductos = await axios.get(`https://login-backend-v24z.onrender.com/productos/listado/${listadoId}`);
+
+    const variantesObj = {};
+    for (const p of resProductos.data) {
+      const res = await axios.get(`https://login-backend-v24z.onrender.com/variantes/producto/${p._id}`);
+      variantesObj[p._id] = res.data;
+    }
+
+    const productosConVariantes = resProductos.data.map(p => ({
+      ...p,
+      variantes: variantesObj[p._id] || []
+    }));
+    const varianteSeleccionadaTexto = idVarianteVenta
+    ? Object.entries(varianteSeleccionadas.find(v => v._id === idVarianteVenta).atributos)
+        .map(([k, val]) => `${k}: ${val}`)
+        .join(" / ")
+    : "";
+
+    setProductos(productosConVariantes);
+    setVariantes(variantesObj);
+
+    // registrar movimiento
+    await registrarMovimiento("COMPRA", producto.nombre, cantidadCompra, producto.costo, varianteSeleccionadaTexto);
+
+    // reset
+    setIdCompra("");
+    setIdVarianteVenta("");
+    setCantidadCompra("");
+
+  } catch (error) {
+    console.error("Error en la compra:", error);
+  }
+};
+
 
 
 
@@ -255,20 +355,59 @@ return (
             <h3>Venta</h3>
             <div className="formulario">
                 <form onSubmit={venta}>
-                <div className="form-contenedor">
-                    <div className="opciones">
-                    <select value={idVenta} onChange={e => setIdVenta(e.target.value)} required>
-                        <option value="">Seleccionar producto</option>
-                        {productos.map(p => (
-                        <option key={p._id} value={p._id}>{p.nombre}</option>
+                {/* Select de producto */}
+                <label>Producto</label>
+                <select
+                    value={idVenta}
+                    onChange={e => {
+                    const prodId = e.target.value;
+                    setIdVenta(prodId);
+                    setIdVarianteVenta("");
+
+                    // Usar el estado variantes para obtener las variantes del producto
+                    setVarianteSeleccionadas(variantes[prodId] || []);
+                    }}
+                    required
+                >
+                    <option value="">Seleccionar producto</option>
+                    {productos.map(p => (
+                    <option key={p._id} value={p._id}>
+                        {p.nombre}
+                    </option>
+                    ))}
+                </select>
+
+                {/* Select de variante solo si existen */}
+                {varianteSeleccionadas && varianteSeleccionadas.length > 0 && (
+                    <>
+                    <label>Variante</label>
+                    <select
+                        value={idVarianteVenta}
+                        onChange={e => setIdVarianteVenta(e.target.value)}
+                        required
+                    >
+                        <option value="">Seleccionar variante</option>
+                        {varianteSeleccionadas.map(v => (
+                        <option key={v._id} value={v._id}>
+                            {Object.entries(v.atributos)
+                            .map(([k, val]) => `${k}: ${val}`)
+                            .join(" / ")}
+                        </option>
                         ))}
                     </select>
-                    </div>
-                    <div className="cantidades">
-                    <label>Cantidad</label>
-                    <input type="number" value={cantidadVenta} onChange={e => setCantidadVenta(e.target.value)} required />
-                    </div>
-                </div>
+                    </>
+                )}
+
+                {/* Cantidad a vender */}
+                <label>Cantidad</label>
+                <input
+                    type="number"
+                    value={cantidadVenta}
+                    onChange={e => setCantidadVenta(e.target.value)}
+                    min={1}
+                    required
+                />
+
                 <button type="submit">Vender</button>
                 </form>
             </div>
@@ -279,20 +418,58 @@ return (
             <h3>Compra</h3>
             <div className="formulario">
                 <form onSubmit={compra}>
-                <div className="form-contenedor">
-                    <div className="opciones">
-                    <select value={idCompra} onChange={e => setIdCompra(e.target.value)} required>
-                        <option value="">Seleccionar producto</option>
-                        {productos.map(p => (
-                        <option key={p._id} value={p._id}>{p.nombre}</option>
+                {/* Select de producto */}
+                <label>Producto</label>
+                <select
+                    value={idCompra}
+                    onChange={e => {
+                    setIdCompra(e.target.value);
+                    // resetear variante seleccionada
+                    setIdVarianteVenta("");
+                    // buscar variantes desde el objeto variantes
+                    setVarianteSeleccionadas(variantes[e.target.value] || []);
+                    }}
+                    required
+                >
+                    <option value="">Seleccionar producto</option>
+                    {productos.map(p => (
+                    <option key={p._id} value={p._id}>
+                        {p.nombre}
+                    </option>
+                    ))}
+                </select>
+
+                {/* Select de variante solo si existen */}
+                {varianteSeleccionadas && varianteSeleccionadas.length > 0 && (
+                    <>
+                    <label>Variante</label>
+                    <select
+                        value={idVarianteVenta}
+                        onChange={e => setIdVarianteVenta(e.target.value)}
+                        required
+                    >
+                        <option value="">Seleccionar variante</option>
+                        {varianteSeleccionadas.map(v => (
+                        <option key={v._id} value={v._id}>
+                            {Object.entries(v.atributos)
+                            .map(([k, val]) => `${k}: ${val}`)
+                            .join(" / ")}
+                        </option>
                         ))}
                     </select>
-                    </div>
-                    <div className="cantidades">
-                    <label>Cantidad</label>
-                    <input type="number" value={cantidadCompra} onChange={e => setCantidadCompra(e.target.value)} required />
-                    </div>
-                </div>
+                    </>
+                )}
+
+                {/* Cantidad a comprar */}
+                <label>Cantidad</label>
+                <input
+                    type="number"
+                    value={cantidadCompra}
+                    onChange={e => setCantidadCompra(e.target.value)}
+                    min={1}
+                    required
+                />
+
                 <button type="submit">Comprar</button>
                 </form>
             </div>
@@ -308,6 +485,7 @@ return (
                     <li key={i} className="venta-item">
                     <div className="venta-info">
                         <span className="producto">{v.producto}</span>
+                        {v.variante && <span className="variante"> ({v.variante})</span>}
                         <span className="fecha">
                         {new Date(v.fecha).toLocaleDateString("es-AR", {
                             day: "2-digit",
