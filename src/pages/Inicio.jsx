@@ -4,6 +4,8 @@ import { AuthContext } from "../AuthContext"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import {} from "@fortawesome/free-regular-svg-icons"
 import { faArrowTrendUp,faBoxOpen,faShoppingCart } from "@fortawesome/free-solid-svg-icons"
+import { traerDatos,actualizarProducto,actualizarVariante } from "../functions/funcionesComunes";
+
 
 
 import axios from "axios"
@@ -15,44 +17,31 @@ const Inicio = () => {
     const [productos, setProductos] = useState([])
     const [historial, setHistorial] = useState([])
     const [variantes, setVariantes] = useState([]);
+    const [loading, setLoading] = useState(false)
 
   /* =========================
      CARGAR PRODUCTOS
   ========================= */
 useEffect(() => {
-    if (!listadoId) return;
+  if (!listadoId) return;
 
-    const traerDatos = async () => {
-        try {
-        const [resProductos, resHistorial] = await Promise.all([
-            axios.get(
-            `https://login-backend-v24z.onrender.com/productos/listado/${listadoId}`
-            ),
-            axios.get(
-            `https://login-backend-v24z.onrender.com/movimientos/listado/${listadoId}`
-            )
-        ]);
+const cargarDatos = async () => {
+  setLoading(true);
+  try {
+    const { productos, historial, variantes } = await traerDatos(listadoId);
+    setProductos(productos);
+    setHistorial(historial);
+    setVariantes(variantes);
+  } catch (error) {
+    console.error(error);
+  } finally {
+    setLoading(false);
+  }
+};
 
-        setProductos(resProductos.data);
-        setHistorial(resHistorial.data);
 
-        // traer variantes por producto
-        const variantesObj = {};
-        for (const p of resProductos.data) {
-            const res = await axios.get(
-            `https://login-backend-v24z.onrender.com/variantes/producto/${p._id}`
-            );
-            variantesObj[p._id] = res.data;
-        }
 
-        setVariantes(variantesObj);
-
-        } catch (error) {
-        console.error("Error al traer datos:", error);
-        }
-    };
-
-    traerDatos();
+  cargarDatos();
 }, [listadoId]);
 
 
@@ -110,6 +99,12 @@ const [idVarianteVenta, setIdVarianteVenta] = useState("");
 const [varianteSeleccionadas, setVarianteSeleccionadas] = useState([]);
 
 
+const refrescarDatos = async () => {
+  const { productos, historial, variantes } = await traerDatos(listadoId);
+  setProductos(productos);
+  setHistorial(historial);
+  setVariantes(variantes);
+};
 
 
 
@@ -123,57 +118,43 @@ const venta = async (e) => {
   if (!producto) return;
 
   try {
-    if (varianteSeleccionadas.length > 0 && idVarianteVenta) {
-      // restar cantidad de la variante seleccionada
+    let varianteTexto = "";
+
+    if (idVarianteVenta) {
       const variante = varianteSeleccionadas.find(v => v._id === idVarianteVenta);
-      const nuevaCantidad = Math.max(0, variante.cantidad - Number(cantidadVenta));
 
-      await axios.put(`https://login-backend-v24z.onrender.com/variantes/${idVarianteVenta}`, {
-        cantidad: nuevaCantidad
+      await actualizarVariante(idVarianteVenta, {
+        cantidad: Math.max(0, variante.cantidad - Number(cantidadVenta))
       });
-    } else {
-      // Producto sin variantes
-      const nuevaCantidad = Math.max(0, producto.cantidad - Number(cantidadVenta));
-      await axios.put(`https://login-backend-v24z.onrender.com/productos/${idVenta}`, {
-        cantidad: nuevaCantidad
-      });
-    }
 
-    // 🔄 Refrescar productos y variantes
-    const resProductos = await axios.get(`https://login-backend-v24z.onrender.com/productos/listado/${listadoId}`);
-
-    const variantesObj = {};
-    for (const p of resProductos.data) {
-      const res = await axios.get(`https://login-backend-v24z.onrender.com/variantes/producto/${p._id}`);
-      variantesObj[p._id] = res.data;
-    }
-
-    const productosConVariantes = resProductos.data.map(p => ({
-      ...p,
-      variantes: variantesObj[p._id] || []
-    }));
-    const varianteSeleccionadaTexto = idVarianteVenta
-    ? Object.entries(varianteSeleccionadas.find(v => v._id === idVarianteVenta).atributos)
+      // 🔑 armar texto de variante
+      varianteTexto = Object.entries(variante.atributos)
         .map(([k, val]) => `${k}: ${val}`)
-        .join(" / ")
-    : "";
+        .join(" / ");
+    } else {
+      await actualizarProducto(idVenta, {
+        cantidad: Math.max(0, producto.cantidad - Number(cantidadVenta))
+      });
+    }
 
+    await refrescarDatos();
 
-    setProductos(productosConVariantes);
-    setVariantes(variantesObj);
+    await registrarMovimiento(
+      "VENTA",
+      producto.nombre,
+      cantidadVenta,
+      producto.precio,
+      varianteTexto
+    );
 
-    // registrar movimiento
-    await registrarMovimiento("VENTA", producto.nombre, cantidadVenta, producto.precio,varianteSeleccionadaTexto);
-
-    // reset
     setIdVenta("");
     setIdVarianteVenta("");
     setCantidadVenta("");
-
   } catch (error) {
-    console.error("Error en la venta:", error);
+    console.error(error);
   }
 };
+
 
 
 
@@ -185,56 +166,44 @@ const compra = async (e) => {
   if (!producto) return;
 
   try {
-    if (varianteSeleccionadas.length > 0 && idVarianteVenta) {
-      // Sumar cantidad a la variante seleccionada
+    let varianteTexto = "";
+
+    if (idVarianteVenta) {
       const variante = varianteSeleccionadas.find(v => v._id === idVarianteVenta);
-      const nuevaCantidad = variante.cantidad + Number(cantidadCompra);
 
-      await axios.put(`https://login-backend-v24z.onrender.com/variantes/${idVarianteVenta}`, {
-        cantidad: nuevaCantidad
+      await actualizarVariante(idVarianteVenta, {
+        cantidad: variante.cantidad + Number(cantidadCompra)
       });
-    } else {
-      // Producto sin variantes
-      const nuevaCantidad = producto.cantidad + Number(cantidadCompra);
-      await axios.put(`https://login-backend-v24z.onrender.com/productos/${idCompra}`, {
-        cantidad: nuevaCantidad
-      });
-    }
 
-    // 🔄 Refrescar productos y variantes
-    const resProductos = await axios.get(`https://login-backend-v24z.onrender.com/productos/listado/${listadoId}`);
-
-    const variantesObj = {};
-    for (const p of resProductos.data) {
-      const res = await axios.get(`https://login-backend-v24z.onrender.com/variantes/producto/${p._id}`);
-      variantesObj[p._id] = res.data;
-    }
-
-    const productosConVariantes = resProductos.data.map(p => ({
-      ...p,
-      variantes: variantesObj[p._id] || []
-    }));
-    const varianteSeleccionadaTexto = idVarianteVenta
-    ? Object.entries(varianteSeleccionadas.find(v => v._id === idVarianteVenta).atributos)
+      // 🔑 guardar texto de variante
+      varianteTexto = Object.entries(variante.atributos)
         .map(([k, val]) => `${k}: ${val}`)
-        .join(" / ")
-    : "";
+        .join(" / ");
+    } else {
+      await actualizarProducto(idCompra, {
+        cantidad: producto.cantidad + Number(cantidadCompra)
+      });
+    }
 
-    setProductos(productosConVariantes);
-    setVariantes(variantesObj);
+    await refrescarDatos();
 
-    // registrar movimiento
-    await registrarMovimiento("COMPRA", producto.nombre, cantidadCompra, producto.costo, varianteSeleccionadaTexto);
+    await registrarMovimiento(
+      "COMPRA",
+      producto.nombre,
+      cantidadCompra,
+      producto.costo,
+      varianteTexto
+    );
 
     // reset
     setIdCompra("");
     setIdVarianteVenta("");
     setCantidadCompra("");
-
   } catch (error) {
     console.error("Error en la compra:", error);
   }
 };
+
 
 
 

@@ -7,6 +7,7 @@ import autoTable from "jspdf-autotable"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import {} from "@fortawesome/free-regular-svg-icons"
 import { faMagnifyingGlass, faTrash, faArrowUpWideShort, faArrowDownWideShort } from "@fortawesome/free-solid-svg-icons"
+import { traerDatos } from "../functions/funcionesComunes";
 
 const Productos = () => {
   const { isLoggedIn } = useContext(AuthContext)
@@ -24,43 +25,28 @@ const Productos = () => {
   const [orden, setOrden] = useState("--")
   const [direccion, setDireccion] = useState("asc") // asc | desc
   const [inventario, setInventario] = useState("")
+  const [loading, setLoading] = useState(false)
 
 
 useEffect(() => {
   if (!listadoId) return;
 
-  const traerDatos = async () => {
+  const cargarDatos = async () => {
+    setLoading(true);
     try {
-      const [resProductos, resHistorial] = await Promise.all([
-        axios.get(
-          `https://login-backend-v24z.onrender.com/productos/listado/${listadoId}`
-        ),
-        axios.get(
-          `https://login-backend-v24z.onrender.com/movimientos/listado/${listadoId}`
-        )
-      ]);
-
-      setProductos(resProductos.data);
-      setHistorial(resHistorial.data);
-
-      // traer variantes por producto
-      const variantesObj = {};
-      for (const p of resProductos.data) {
-        const res = await axios.get(
-          `https://login-backend-v24z.onrender.com/variantes/producto/${p._id}`
-        );
-        variantesObj[p._id] = res.data;
-      }
-
-      setVariantes(variantesObj);
-
+      const { productos, historial, variantes } = await traerDatos(listadoId);
+      setProductos(productos);
+      setHistorial(historial);
+      setVariantes(variantes);
     } catch (error) {
-      console.error("Error al traer datos:", error);
+      console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
-
-  traerDatos();
+  cargarDatos();
 }, [listadoId]);
+
 
   useEffect(() => {
     if (!busquedaProdu) {
@@ -411,14 +397,16 @@ const descargarPDF = () => {
                   {vars.length > 0 && (
                     <div className="variantes-stock">
                       <ul>
-                        {vars.map(v => (
-                          <li key={v._id}>
-                            {Object.entries(v.atributos)
-                              .map(([k, val]) => `${k} ${val}`)
-                              .join(" / ")}{" "}
-                              {"-->"} {v.cantidad} |
-                          </li>
-                        ))}
+                        {loading ? (<h3>Cargando...</h3>) : (
+                          vars.map(v => (
+                            <li key={v._id}>
+                              {Object.entries(v.atributos)
+                                .map(([k, val]) => `${k} ${val}`)
+                                .join(" / ")}{" "}
+                                {"-->"} {v.cantidad} |
+                            </li>
+                          ))
+                        )}
                       </ul>
                     </div>
                   )}
